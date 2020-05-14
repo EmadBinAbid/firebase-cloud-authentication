@@ -292,6 +292,70 @@ app.post('/addSocialWebsite', (req, res) => {
     }
 });
 
+app.post('/addWeatherWebsite', (req, res) => {
+    if (req.headers.authtoken) {
+        admin.auth().verifyIdToken(req.headers.authtoken)
+            .then(() => {
+                db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                    .then(function (querySnapshot) {
+                        if (querySnapshot.empty) {
+                            db.collection('userBookmarks').add({
+                                uuid: req.body.uuid,
+                                likedWebsites: [],
+                                newsWebsites: [],
+                                socialWebsites: [],
+                                weatherWebsites: [req.body.weatherWebsite]
+                            })
+                        }
+                        else {
+                            let allWeatherWebsites = [];
+                            querySnapshot.docs[0].data()["weatherWebsites"].forEach(function (website) {
+                                allWeatherWebsites.push(website);
+                            });
+                            allWeatherWebsites.push(req.body.weatherWebsite);
+                            db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                weatherWebsites: allWeatherWebsites
+                            });
+                        }
+
+                        db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                            .then(function (querySnapshot) {
+                                if (querySnapshot.empty) {
+                                    res.json({
+                                        message: 'No relevant document found.'
+                                    });
+                                }
+                                else {
+                                    res.json({
+                                        message: 'Successfully updated data',
+                                        data: querySnapshot.docs[0].data()
+                                    });
+                                }
+                                return;
+                            })
+                            .catch(function (error) {
+                                console.log('Error in updating user bookmarks:', error);
+                                res.json({
+                                    message: `Error in updating user bookmarks:, ${error}`
+                                });
+                            });
+                        return;
+                    })
+                    .catch(function (error) {
+                        console.log('Error in retrieving user bookmarks:', error);
+                        res.json({
+                            message: `Error in retrieving user bookmarks:, ${error}`
+                        });
+                    });
+                return;
+            }).catch(() => {
+                res.status(403).send('Unauthorized')
+            });
+    } else {
+        res.status(403).send('Unauthorized')
+    }
+});
+
 app.post('/register', (req, res) => {
     if (req.body.email && req.body.password && req.body.firstName && req.body.lastName) {
         admin.auth().createUser({
