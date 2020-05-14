@@ -37,8 +37,6 @@ app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// firebase.auth().currentUser.uid
-
 app.post('/getUser', (req, res) => {
     if (req.headers.authtoken) {
         admin.auth().verifyIdToken(req.headers.authtoken)
@@ -64,7 +62,7 @@ app.post('/getUser', (req, res) => {
                             message: `Error in retrieving users:, ${error}`
                         });
                     });
-                    return;
+                return;
             }).catch(() => {
                 res.status(403).send('Unauthorized')
             });
@@ -98,7 +96,71 @@ app.get('/getAllUsers', (req, res) => {
                             message: `Error in retrieving users:, ${error}`
                         });
                     });
-                    return;
+                return;
+            }).catch(() => {
+                res.status(403).send('Unauthorized')
+            });
+    } else {
+        res.status(403).send('Unauthorized')
+    }
+});
+
+app.post('/addLikedWebsite', (req, res) => {
+    if (req.headers.authtoken) {
+        admin.auth().verifyIdToken(req.headers.authtoken)
+            .then(() => {
+                db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                    .then(function (querySnapshot) {
+                        if (querySnapshot.empty) {
+                            db.collection('userBookmarks').add({
+                                uuid: req.body.uuid,
+                                likedWebsites: [req.body.likedWebsite],
+                                newsWebsites: [],
+                                socialWebsites: [],
+                                weatherWebsites: []
+                            })
+                        }
+                        else {
+                            let allLikedWebsites = [];
+                            querySnapshot.docs[0].data()["likedWebsites"].forEach(function (website) {
+                                allLikedWebsites.push(website);
+                            });
+                            allLikedWebsites.push(req.body.likedWebsite);
+                            db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                likedWebsites: allLikedWebsites// firebase.firestore.FieldValue.arrayUnion(req.body.likedWebsite)
+                            });
+                        }
+
+                        db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                            .then(function (querySnapshot) {
+                                if (querySnapshot.empty) {
+                                    res.json({
+                                        message: 'No relevant document found.'
+                                    });
+                                }
+                                else {
+                                    res.json({
+                                        message: 'Successfully updated data',
+                                        data: querySnapshot.docs[0].data()
+                                    });
+                                }
+                                return;
+                            })
+                            .catch(function (error) {
+                                console.log('Error in updating user bookmarks:', error);
+                                res.json({
+                                    message: `Error in updating user bookmarks:, ${error}`
+                                });
+                            });
+                        return;
+                    })
+                    .catch(function (error) {
+                        console.log('Error in retrieving user bookmarks:', error);
+                        res.json({
+                            message: `Error in retrieving user bookmarks:, ${error}`
+                        });
+                    });
+                return;
             }).catch(() => {
                 res.status(403).send('Unauthorized')
             });
