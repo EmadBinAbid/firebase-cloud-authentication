@@ -43,16 +43,11 @@ app.post('/getUser', (req, res) => {
             .then(() => {
                 db.collection('userDetails').where('uuid', '==', req.body.uuid).get()
                     .then(function (querySnapshot) {
-                        let matchingUsers = [];
-
-                        querySnapshot.forEach(function (doc) {
-                            matchingUsers.push({
-                                docId: doc.id,
-                                data: doc.data()
-                            })
-                            res.json({
-                                response: matchingUsers
-                            });
+                        res.json({
+                            response: {
+                                docId: querySnapshot.docs[0].id,
+                                data: querySnapshot.docs[0].data()
+                            }
                         });
                         return;
                     })
@@ -127,7 +122,7 @@ app.post('/addLikedWebsite', (req, res) => {
                             });
                             allLikedWebsites.push(req.body.likedWebsite);
                             db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
-                                likedWebsites: allLikedWebsites// firebase.firestore.FieldValue.arrayUnion(req.body.likedWebsite)
+                                likedWebsites: allLikedWebsites
                             });
                         }
 
