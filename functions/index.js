@@ -107,6 +107,145 @@ app.get('/getAllUsers', (req, res) => {
     }
 });
 
+app.post('/addBookmark', (req, res) => {
+    if (req.headers.authtoken) {
+        if (req.body.uuid && req.body.type && req.body.website) {
+            admin.auth().verifyIdToken(req.headers.authtoken)
+                .then(() => {
+                    db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                        .then(function (querySnapshot) {
+                            if (querySnapshot.empty) {
+                                if (req.body.type === 'liked') {
+                                    db.collection('userBookmarks').add({
+                                        uuid: req.body.uuid,
+                                        likedWebsites: [req.body.website],
+                                        newsWebsites: [],
+                                        socialWebsites: [],
+                                        weatherWebsites: []
+                                    })
+                                }
+                                else if (req.body.type === 'news') {
+                                    db.collection('userBookmarks').add({
+                                        uuid: req.body.uuid,
+                                        likedWebsites: [],
+                                        newsWebsites: [req.body.website],
+                                        socialWebsites: [],
+                                        weatherWebsites: []
+                                    })
+                                }
+                                else if (req.body.type === 'social') {
+                                    db.collection('userBookmarks').add({
+                                        uuid: req.body.uuid,
+                                        likedWebsites: [],
+                                        newsWebsites: [],
+                                        socialWebsites: [req.body.website],
+                                        weatherWebsites: []
+                                    })
+                                }
+                                else if (req.body.type === 'weather') {
+                                    db.collection('userBookmarks').add({
+                                        uuid: req.body.uuid,
+                                        likedWebsites: [],
+                                        newsWebsites: [],
+                                        socialWebsites: [],
+                                        weatherWebsites: [req.body.website]
+                                    })
+                                }
+                                else {
+                                    res.json({
+                                        message: 'Invalid value of field type'
+                                    })
+                                }
+                            }
+                            else {
+                                let allWebsites = [];
+                                if (req.body.type === 'liked') {
+                                    querySnapshot.docs[0].data()["likedWebsites"].forEach(function (website) {
+                                        allWebsites.push(website);
+                                    });
+                                    allWebsites.push(req.body.website);
+                                    db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                        likedWebsites: allWebsites
+                                    });
+                                }
+                                else if (req.body.type === 'news') {
+                                    querySnapshot.docs[0].data()["newsWebsites"].forEach(function (website) {
+                                        allWebsites.push(website);
+                                    });
+                                    allWebsites.push(req.body.website);
+                                    db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                        newsWebsites: allWebsites
+                                    });
+                                }
+                                else if (req.body.type === 'social') {
+                                    querySnapshot.docs[0].data()["socialWebsites"].forEach(function (website) {
+                                        allWebsites.push(website);
+                                    });
+                                    allWebsites.push(req.body.website);
+                                    db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                        socialWebsites: allWebsites
+                                    });
+                                }
+                                else if (req.body.type === 'weather') {
+                                    querySnapshot.docs[0].data()["weatherWebsites"].forEach(function (website) {
+                                        allWebsites.push(website);
+                                    });
+                                    allWebsites.push(req.body.website);
+                                    db.collection('userBookmarks').doc(querySnapshot.docs[0].id).update({
+                                        weatherWebsites: allWebsites
+                                    });
+                                }
+                                else {
+                                    res.json({
+                                        message: 'Error: Invalid value of field type'
+                                    })
+                                }
+                            }
+
+                            db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                                .then(function (querySnapshot) {
+                                    if (querySnapshot.empty) {
+                                        res.json({
+                                            message: 'No relevant document found.'
+                                        });
+                                    }
+                                    else {
+                                        res.json({
+                                            message: 'Successfully updated data',
+                                            data: querySnapshot.docs[0].data()
+                                        });
+                                    }
+                                    return;
+                                })
+                                .catch(function (error) {
+                                    console.log('Error in updating user bookmarks:', error);
+                                    res.json({
+                                        message: `Error in updating user bookmarks:, ${error}`
+                                    });
+                                });
+                            return;
+                        })
+                        .catch(function (error) {
+                            console.log('Error in retrieving user bookmarks:', error);
+                            res.json({
+                                message: `Error in retrieving user bookmarks:, ${error}`
+                            });
+                        });
+                    return;
+                }).catch(() => {
+                    res.status(403).send('Unauthorized')
+                });
+        }
+        else {
+            res.json({
+                message: 'Error: The request payload must have uuid, type, and website fields.'
+            });
+        }
+    } else {
+        res.status(403).send('Unauthorized')
+    }
+});
+
 app.post('/addLikedWebsite', (req, res) => {
     if (req.headers.authtoken) {
         if (req.body.uuid && req.body.likedWebsite) {
