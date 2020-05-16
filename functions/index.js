@@ -109,6 +109,7 @@ app.get('/getAllUsers', (req, res) => {
 
 app.post('/addBookmark', (req, res) => {
     if (req.headers.authtoken) {
+        console.log(req.body);
         if (req.body.uuid && req.body.type && req.body.website) {
             admin.auth().verifyIdToken(req.headers.authtoken)
                 .then(() => {
@@ -606,7 +607,7 @@ app.post('/login', (req, res) => {
     }
     else {
         res.json({
-            message: "Error: The request payload must have email, password, firstName and lastName fields."
+            message: "Error: The request payload must have email and password fields."
         });
     }
 });
