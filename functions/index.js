@@ -581,9 +581,18 @@ app.post('/login', (req, res) => {
                 .then(function (userRecord) {
                     firebase.auth().currentUser.getIdToken(true)
                         .then(function (idToken) {
-                            res.json({
-                                message: 'Successfully signed in',
-                                token: idToken
+                            firebase.auth().onAuthStateChanged((user) => {
+                                if (user) {
+                                    res.json({
+                                        message: 'Successfully signed in',
+                                        token: idToken,
+                                        uuid: user.uid
+                                    });
+                                } else {
+                                    res.json({
+                                        message: 'Error while fetching auth state'
+                                    });
+                                }
                             });
                             return;
                         })
