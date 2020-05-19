@@ -110,15 +110,15 @@ app.get('/getAllUsers', (req, res) => {
 app.post('/addBookmark', (req, res) => {
     if (req.headers.authtoken) {
         console.log(req.body);
-        if (req.body.uuid && req.body.type && req.body.website) {
+        if (req.body.type && req.body.website) {
             admin.auth().verifyIdToken(req.headers.authtoken)
-                .then(() => {
-                    db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                .then((decodeToken) => {
+                    db.collection('userBookmarks').where('uuid', '==', decodeToken.uid).get()
                         .then(function (querySnapshot) {
                             if (querySnapshot.empty) {
                                 if (req.body.type === 'liked') {
                                     db.collection('userBookmarks').add({
-                                        uuid: req.body.uuid,
+                                        uuid: decodeToken.uid,
                                         likedWebsites: [req.body.website],
                                         newsWebsites: [],
                                         socialWebsites: [],
@@ -127,7 +127,7 @@ app.post('/addBookmark', (req, res) => {
                                 }
                                 else if (req.body.type === 'news') {
                                     db.collection('userBookmarks').add({
-                                        uuid: req.body.uuid,
+                                        uuid: decodeToken.uid,
                                         likedWebsites: [],
                                         newsWebsites: [req.body.website],
                                         socialWebsites: [],
@@ -136,7 +136,7 @@ app.post('/addBookmark', (req, res) => {
                                 }
                                 else if (req.body.type === 'social') {
                                     db.collection('userBookmarks').add({
-                                        uuid: req.body.uuid,
+                                        uuid: decodeToken.uid,
                                         likedWebsites: [],
                                         newsWebsites: [],
                                         socialWebsites: [req.body.website],
@@ -145,7 +145,7 @@ app.post('/addBookmark', (req, res) => {
                                 }
                                 else if (req.body.type === 'weather') {
                                     db.collection('userBookmarks').add({
-                                        uuid: req.body.uuid,
+                                        uuid: decodeToken.uid,
                                         likedWebsites: [],
                                         newsWebsites: [],
                                         socialWebsites: [],
@@ -203,7 +203,7 @@ app.post('/addBookmark', (req, res) => {
                                 }
                             }
 
-                            db.collection('userBookmarks').where('uuid', '==', req.body.uuid).get()
+                            db.collection('userBookmarks').where('uuid', '==', decodeToken.uid).get()
                                 .then(function (querySnapshot) {
                                     if (querySnapshot.empty) {
                                         res.json({
@@ -239,7 +239,7 @@ app.post('/addBookmark', (req, res) => {
         }
         else {
             res.json({
-                message: 'Error: The request payload must have uuid, type, and website fields.'
+                message: 'Error: The request payload must have type and website fields.'
             });
         }
     } else {
