@@ -585,8 +585,7 @@ app.post('/login', (req, res) => {
                                 if (user) {
                                     res.json({
                                         message: 'Successfully signed in',
-                                        token: idToken,
-                                        uuid: user.uid
+                                        token: idToken
                                     });
                                 } else {
                                     res.json({
